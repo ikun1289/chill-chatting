@@ -44,13 +44,16 @@ public class MessageController {
 
     @PostMapping
     public ResponseEntity<Message> guiMessage(@RequestBody MessageDto dto) throws Exception {
+        scheduledUpdateMessage();
         return new ResponseEntity<>(messageService.guiMessage(dto), HttpStatus.OK);
     }
 
+    @GetMapping("/{kenh}")
+    public ResponseEntity<List<Message>> getListOfLatestMessages(@PathVariable String kenh) {
+        return new ResponseEntity<>(messageService.getTheLatestMessages(kenh), HttpStatus.OK);
+    }
 
-    @Scheduled(fixedRate = 3000)
     public void scheduledUpdateMessage() throws InterruptedException {
-        System.out.println("scheduled");
         for (MyEnum kenh: messageService.getKenhs()) {
 //            MessageDto message = new MessageDto();
 //            message.setChannel(kenh.getKey());
