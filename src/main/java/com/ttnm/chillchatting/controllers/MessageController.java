@@ -44,8 +44,9 @@ public class MessageController {
 
     @PostMapping
     public ResponseEntity<Message> guiMessage(@RequestBody MessageDto dto) throws Exception {
+        Message message = messageService.guiMessage(dto);
         scheduledUpdateMessage();
-        return new ResponseEntity<>(messageService.guiMessage(dto), HttpStatus.OK);
+        return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
     @GetMapping("/{kenh}")
