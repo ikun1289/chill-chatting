@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.util.*;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -97,8 +98,10 @@ public class MessageServiceImpl implements MessageService{
 
     @Override
     public List<Message> getTheLatestMessages(String kenh){
-        Pageable pageable = PageUtils.createPageable(0, 20, "asc", "createdDate");
-        return messageRepository.getListMessageWithLimit(kenh, pageable);
+        Pageable pageable = PageUtils.createPageable(0, 20, "desc", "createdDate");
+        List<Message> result = messageRepository.getListMessageWithLimit(kenh, pageable);
+        Collections.reverse(result);
+        return result;
     }
 
 }
