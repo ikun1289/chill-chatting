@@ -7,15 +7,23 @@ import com.ttnm.chillchatting.dtos.MyEnum;
 import com.ttnm.chillchatting.dtos.RegistNameRequest;
 import com.ttnm.chillchatting.dtos.RegistNameResponse;
 import com.ttnm.chillchatting.dtos.message.MessageDto;
+import com.ttnm.chillchatting.dtos.statistic.MapStatistic;
 import com.ttnm.chillchatting.dtos.statistic.Statistic;
 import com.ttnm.chillchatting.dtos.statistic.embed.ChartStatistic;
+import com.ttnm.chillchatting.dtos.statistic.embed.MapStatisticId;
 import com.ttnm.chillchatting.entities.Message;
 import com.ttnm.chillchatting.exceptions.InvalidException;
 import com.ttnm.chillchatting.repositories.MessageRepository;
 import com.ttnm.chillchatting.utils.EnumChannel;
 import com.ttnm.chillchatting.utils.PageUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -26,6 +34,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
 @Slf4j
 @Service
@@ -39,13 +50,16 @@ public class MessageServiceImpl implements MessageService{
 
     private final PasswordEncoder passwordEncoder;
 
+    private final MongoTemplate mongoTemplate;
+
     private static final String SECRET = "xhuuanng";
 
-    public MessageServiceImpl(MessageRepository messageRepository, JwtTokenProvider jwtTokenProvider, JwtAuthenticationFilter jwtAuthenticationFilter, PasswordEncoder passwordEncoder) {
+    public MessageServiceImpl(MessageRepository messageRepository, JwtTokenProvider jwtTokenProvider, JwtAuthenticationFilter jwtAuthenticationFilter, PasswordEncoder passwordEncoder, MongoTemplate mongoTemplate) {
         this.messageRepository = messageRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.passwordEncoder = passwordEncoder;
+        this.mongoTemplate = mongoTemplate;
     }
 
     @Override
@@ -136,6 +150,7 @@ public class MessageServiceImpl implements MessageService{
         int totalMessageThisMonth = messageRepository.countMessageByDateRange(firstDate, lastDate);
 
         //statistic
+        List<MapStatistic> listStatistic = testStatistic(firstDate, lastDate);
         cal.setTime(today);
         cal.set(Calendar.DAY_OF_MONTH, 1);
         int myMonth=cal.get(Calendar.MONTH);
@@ -145,17 +160,19 @@ public class MessageServiceImpl implements MessageService{
             dateInMonth.add(cal.getTime());
             cal.add(Calendar.DAY_OF_MONTH, 1);
         }
-        int sum = 0;
         for (Date date:dateInMonth) {
-            Calendar calAddOneDay = Calendar.getInstance();
-            calAddOneDay.setTime(date);
-            calAddOneDay.add(Calendar.DATE, 1);
-            Date nextDate = calAddOneDay.getTime();
+            Calendar cal1 = Calendar.getInstance();
+            cal1.setTime(date);
+            MapStatistic mapStatistic = listStatistic.stream().filter(mapStatistic1 -> mapStatistic1.getDate().getDay() == cal1.get(Calendar.DAY_OF_MONTH)).findFirst().orElse(null);
             ChartStatistic chartStatistic = new ChartStatistic();
-            chartStatistic.setTime(date);
-            int count = messageRepository.countMessageByDateRange(date, nextDate);
-            sum+=count;
-            chartStatistic.setCount(count);
+            if(ObjectUtils.isEmpty(mapStatistic)) {
+                chartStatistic.setDate(cal1.get(Calendar.DAY_OF_MONTH));
+                chartStatistic.setCount(0);
+            }
+            else {
+                chartStatistic.setDate(mapStatistic.getDate().getDay());
+                chartStatistic.setCount(mapStatistic.getCount());
+            }
             chartStatisticList.add(chartStatistic);
         }
 
@@ -166,6 +183,39 @@ public class MessageServiceImpl implements MessageService{
         statistic.setStatisticMessageForThePastMonth(chartStatisticList);
         return statistic;
 
+    }
+
+    public List<MapStatistic> testStatistic(Date firstDate, Date lastDate) {
+        Criteria criteria = new Criteria();
+
+        criteria.and("createdDate").gte(firstDate).lte(lastDate);
+
+        MatchOperation searchOperation = match(criteria);
+
+        ProjectionOperation projectionOperation = project("createdDate")
+                .and(DateOperators.Year.yearOf("createdDate"))
+                .as("year")
+                .and(DateOperators.Month.monthOf("createdDate"))
+                .as("month")
+                .and(DateOperators.DayOfMonth.dayOfMonth("createdDate"))
+                .as("day");
+
+        GroupOperation groupOperation = group("year","month","day").count().as("count");
+
+        SortOperation sortOperation = sort(Sort.Direction.ASC, "id.day");
+
+        Aggregation aggregation = newAggregation(
+                searchOperation,
+                projectionOperation,
+                groupOperation
+        );
+
+
+        AggregationResults<MapStatistic> aggregate = mongoTemplate.aggregate(aggregation,
+                Message.class, MapStatistic.class);
+        List<MapStatistic> documents = aggregate.getMappedResults();
+
+        return documents;
     }
 
 }

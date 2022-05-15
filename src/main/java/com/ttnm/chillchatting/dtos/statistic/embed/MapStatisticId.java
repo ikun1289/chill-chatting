@@ -5,15 +5,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChartStatistic {
+public class MapStatisticId {
+    private int year;
 
-    private int date;
+    private int month;
 
-    private int count;
+    private int day;
 }
