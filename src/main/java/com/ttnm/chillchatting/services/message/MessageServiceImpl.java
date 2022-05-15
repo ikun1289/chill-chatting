@@ -146,7 +146,6 @@ public class MessageServiceImpl implements MessageService{
             cal.add(Calendar.DAY_OF_MONTH, 1);
         }
         int sum = 0;
-        System.out.println("----------");
         for (Date date:dateInMonth) {
             Calendar calAddOneDay = Calendar.getInstance();
             calAddOneDay.setTime(date);
