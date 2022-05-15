@@ -1,5 +1,6 @@
 package com.ttnm.chillchatting.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -17,6 +18,7 @@ public class User {
 
 	private String userName;
 
+	@JsonIgnore
 	private String password;
 
 	private String name;

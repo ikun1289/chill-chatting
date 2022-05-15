@@ -4,6 +4,7 @@ import com.ttnm.chillchatting.dtos.MyEnum;
 import com.ttnm.chillchatting.dtos.RegistNameRequest;
 import com.ttnm.chillchatting.dtos.RegistNameResponse;
 import com.ttnm.chillchatting.dtos.message.MessageDto;
+import com.ttnm.chillchatting.dtos.statistic.Statistic;
 import com.ttnm.chillchatting.entities.Message;
 
 import java.util.List;
@@ -16,4 +17,6 @@ public interface MessageService{
     List<MyEnum> getKenhs();
 
     List<Message> getTheLatestMessages(String key);
+
+    Statistic getStatistic();
 }

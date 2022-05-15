@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
+import java.util.Date;
 import java.util.List;
 
 public interface MessageRepository extends MongoRepository<Message, String> {
@@ -14,5 +15,8 @@ public interface MessageRepository extends MongoRepository<Message, String> {
 
     @Query(value = "{'channel':?0}")
     List<Message> getListMessageWithLimit(String kenh, Pageable pageable);
+
+    @Query(value = "{'createdDate' : { $gte: ?0, $lte: ?1 } }", count = true)
+    int countMessageByDateRange(Date minDate, Date maxDate);
 
 }
