@@ -142,7 +142,6 @@ public class MessageServiceImpl implements MessageService{
         List<Date> dateInMonth = new ArrayList<>();
         List<ChartStatistic> chartStatisticList = new ArrayList<>();
         while (myMonth==cal.get(Calendar.MONTH)) {
-            System.out.println(cal.getTime());
             dateInMonth.add(cal.getTime());
             cal.add(Calendar.DAY_OF_MONTH, 1);
         }
@@ -153,7 +152,6 @@ public class MessageServiceImpl implements MessageService{
             calAddOneDay.setTime(date);
             calAddOneDay.add(Calendar.DATE, 1);
             Date nextDate = calAddOneDay.getTime();
-            System.out.println(nextDate);
             ChartStatistic chartStatistic = new ChartStatistic();
             chartStatistic.setTime(date);
             int count = messageRepository.countMessageByDateRange(date, nextDate);
@@ -161,8 +159,6 @@ public class MessageServiceImpl implements MessageService{
             chartStatistic.setCount(count);
             chartStatisticList.add(chartStatistic);
         }
-        System.out.println("----------");
-        System.out.println(sum);
 
         //statistic
         Statistic statistic = new Statistic();
