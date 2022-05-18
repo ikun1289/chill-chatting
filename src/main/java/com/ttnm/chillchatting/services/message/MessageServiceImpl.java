@@ -10,15 +10,13 @@ import com.ttnm.chillchatting.dtos.message.MessageDto;
 import com.ttnm.chillchatting.dtos.statistic.MapStatistic;
 import com.ttnm.chillchatting.dtos.statistic.Statistic;
 import com.ttnm.chillchatting.dtos.statistic.embed.ChartStatistic;
-import com.ttnm.chillchatting.dtos.statistic.embed.MapStatisticId;
 import com.ttnm.chillchatting.entities.Message;
 import com.ttnm.chillchatting.exceptions.InvalidException;
 import com.ttnm.chillchatting.repositories.MessageRepository;
+import com.ttnm.chillchatting.services.badword.BadWordService;
 import com.ttnm.chillchatting.utils.EnumChannel;
 import com.ttnm.chillchatting.utils.PageUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -52,14 +50,17 @@ public class MessageServiceImpl implements MessageService{
 
     private final MongoTemplate mongoTemplate;
 
+    private final BadWordService badWordService;
+
     private static final String SECRET = "xhuuanng";
 
-    public MessageServiceImpl(MessageRepository messageRepository, JwtTokenProvider jwtTokenProvider, JwtAuthenticationFilter jwtAuthenticationFilter, PasswordEncoder passwordEncoder, MongoTemplate mongoTemplate) {
+    public MessageServiceImpl(MessageRepository messageRepository, JwtTokenProvider jwtTokenProvider, JwtAuthenticationFilter jwtAuthenticationFilter, PasswordEncoder passwordEncoder, MongoTemplate mongoTemplate, BadWordService badWordService) {
         this.messageRepository = messageRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.passwordEncoder = passwordEncoder;
         this.mongoTemplate = mongoTemplate;
+        this.badWordService = badWordService;
     }
 
     @Override
@@ -117,6 +118,9 @@ public class MessageServiceImpl implements MessageService{
         Pageable pageable = PageUtils.createPageable(0, 20, "desc", "createdDate");
         List<Message> result = messageRepository.getListMessageWithLimit(kenh, pageable);
         Collections.reverse(result);
+        for (Message message: result) {
+            message.setMessage(badWordService.filter(message.getMessage()));
+        }
         return result;
     }
 
