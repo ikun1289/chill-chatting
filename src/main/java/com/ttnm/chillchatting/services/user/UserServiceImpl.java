@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.util.List;
+
 
 @Slf4j
 @Service
@@ -71,5 +73,10 @@ public class UserServiceImpl implements UserService {
         newAdmin.setPassword(passwordEncoder.encode(dto.getPassword()));
         newAdmin.setName(dto.getName());
         return userRepository.save(newAdmin);
+    }
+
+    @Override
+    public List<User> getAllUser(){
+        return userRepository.findAll();
     }
 }

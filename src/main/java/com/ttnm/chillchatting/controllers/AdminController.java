@@ -11,13 +11,18 @@ import com.ttnm.chillchatting.services.badword.BadWordService;
 import com.ttnm.chillchatting.services.message.MessageService;
 import com.ttnm.chillchatting.services.user.UserService;
 import com.ttnm.chillchatting.utils.CustomUserDetails;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.util.List;
 
@@ -35,12 +40,18 @@ public class AdminController {
 
     private final BadWordService badWordService;
 
-    public AdminController(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider, UserService userService, MessageService messageService, BadWordService badWordService) {
+    private final SimpMessagingTemplate template;
+
+    private final SimpUserRegistry simpUserRegistry;
+
+    public AdminController(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider, UserService userService, MessageService messageService, BadWordService badWordService, SimpMessagingTemplate template, SimpUserRegistry simpUserRegistry) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userService = userService;
         this.messageService = messageService;
         this.badWordService = badWordService;
+        this.template = template;
+        this.simpUserRegistry = simpUserRegistry;
     }
 
 
@@ -91,5 +102,25 @@ public class AdminController {
     public ResponseEntity<String> getAllBadWord(@PathVariable String id) {
         badWordService.deleteBadWord(id);
         return new ResponseEntity<>("Delete success", HttpStatus.OK);
+    }
+
+    @GetMapping("/number-user")
+    public ResponseEntity<Integer> getNumberOfUser() {
+        return new ResponseEntity<>(simpUserRegistry.getUserCount(), HttpStatus.OK);
+    }
+
+    @EventListener(SessionConnectedEvent.class)
+    public void handleWebsocketConnectListner(SessionConnectedEvent event) {
+        this.template.convertAndSend("/message/number-user", simpUserRegistry.getUserCount());
+    }
+
+    @EventListener(SessionDisconnectEvent.class)
+    public void handleWebsocketDisconnectListner(SessionDisconnectEvent event) {
+        this.template.convertAndSend("/message/number-user", simpUserRegistry.getUserCount());
+    }
+
+    @GetMapping("/list-admin")
+    public ResponseEntity<List<User>> getListUser() {
+        return new ResponseEntity<>(userService.getAllUser(), HttpStatus.OK);
     }
 }

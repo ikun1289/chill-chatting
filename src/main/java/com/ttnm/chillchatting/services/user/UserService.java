@@ -5,6 +5,8 @@ import com.ttnm.chillchatting.entities.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
+import java.util.List;
+
 public interface UserService extends UserDetailsService {
 
     User getUserByUsername(String userName);
@@ -12,4 +14,6 @@ public interface UserService extends UserDetailsService {
     UserDetails loadUserByID(String userId);
 
     User createNewAdmin(UserDto dto);
+
+    List<User> getAllUser();
 }
