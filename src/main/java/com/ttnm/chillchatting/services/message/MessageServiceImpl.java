@@ -100,6 +100,8 @@ public class MessageServiceImpl implements MessageService{
             throw new InvalidException("Tên không hợp với token đã gửi");
         if(ObjectUtils.isEmpty(dto.getMessage()))
             throw new InvalidException("Message không được để trống");
+        if(dto.getMessage().length()>100)
+            throw new InvalidException("Message quá dài");
         if(getKenhs().stream().noneMatch(myEnum -> myEnum.getKey().equals(dto.getChannel())))
             throw new InvalidException("Channel không hợp lệ");
 
