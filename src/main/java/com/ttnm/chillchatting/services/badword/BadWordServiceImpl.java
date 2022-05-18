@@ -82,8 +82,11 @@ public class BadWordServiceImpl implements BadWordService {
             String temp = StringUtils.removeAccentJava(string).toLowerCase(Locale.ROOT);
             for (int count = 0; count < temp.length(); count++) {
                 int i = temp.substring(count).indexOf(badWord.getBadWord());
-                if (i >= 0)
-                    string = string.replace(string.substring(i+count, i+count + badWord.getBadWord().length()), org.apache.commons.lang.StringUtils.repeat("*", badWord.getBadWord().length()));
+                if (i >= 0) {
+                    string = string.replace(string.substring(i + count, i + count + badWord.getBadWord().length()), org.apache.commons.lang.StringUtils.repeat("*", badWord.getBadWord().length()));
+                    count = i+count + badWord.getBadWord().length();
+                }
+                else break;
             }
         }
         return string;

@@ -6,10 +6,12 @@ import com.ttnm.chillchatting.dtos.RegistNameRequest;
 import com.ttnm.chillchatting.dtos.RegistNameResponse;
 import com.ttnm.chillchatting.dtos.message.MessageDto;
 import com.ttnm.chillchatting.entities.Message;
+import com.ttnm.chillchatting.exceptions.InvalidException;
 import com.ttnm.chillchatting.services.message.MessageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,7 +48,14 @@ public class MessageController {
     @PostMapping
     public ResponseEntity<Message> guiMessage(@RequestBody MessageDto dto) throws Exception {
         Message message = messageService.guiMessage(dto);
-        scheduledUpdateMessage();
+        Thread thread = new Thread(() -> {
+            try {
+                scheduledUpdateMessage();
+            } catch (InterruptedException e) {
+                throw new InvalidException("error");
+            }
+        });
+        thread.start();
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
