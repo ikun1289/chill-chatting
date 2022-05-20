@@ -17,4 +17,6 @@ public interface BadWordService {
     void deleteBadWord(String id);
 
     String filter(String string);
+
+    String filterWithRegex(String string);
 }

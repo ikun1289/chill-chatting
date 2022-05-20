@@ -3,6 +3,7 @@ package com.ttnm.chillchatting.utils;
 import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -29,6 +30,17 @@ public class StringUtils {
         }
         result.append(new SimpleDateFormat("ddMMyyyyHHmmss").format(new Date()));
         return result.toString();
+    }
+
+    public static String makeVietNameseRegex(String s) {
+        s = s.replaceAll("a","[aàáâãăạảấầẩẫậắằẳẵặ]");
+        s = s.replaceAll("d","[dđ]");
+        s = s.replaceAll("e","[eèéêẹẻẽếềểễệ]");
+        s = s.replaceAll("i","[iìíĩỉị]");
+        s = s.replaceAll("o","[oòóõọỏôốồổỗộơớờởỡợ]");
+        s = s.replaceAll("u","[uùũúưụủứừửữự]");
+        s = s.replaceAll("y","[yýỹỳỷỵ]");
+        return s;
     }
 }
 

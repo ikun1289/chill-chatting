@@ -13,6 +13,7 @@ import org.springframework.util.ObjectUtils;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -78,8 +79,8 @@ public class BadWordServiceImpl implements BadWordService {
     @Override
     public String filter(String string) {
         List<BadWord> badWords = getAll();
+        String temp = StringUtils.removeAccentJava(string).toLowerCase(Locale.ROOT);
         for (BadWord badWord : badWords) {
-            String temp = StringUtils.removeAccentJava(string).toLowerCase(Locale.ROOT);
             for (int count = 0; count < temp.length(); count++) {
                 int i = temp.substring(count).indexOf(badWord.getBadWord());
                 if (i >= 0) {
@@ -88,6 +89,18 @@ public class BadWordServiceImpl implements BadWordService {
                 }
                 else break;
             }
+        }
+        return string;
+    }
+
+    @Override
+    public String filterWithRegex(String string) {
+        List<BadWord> badWords = getAll();
+        for (BadWord badWord : badWords) {
+            String regex = StringUtils.makeVietNameseRegex(badWord.getBadWord());
+            Pattern pattern = Pattern.compile(regex);
+            System.out.println(pattern.pattern());
+            string = string.replaceAll(pattern.pattern(), org.apache.commons.lang.StringUtils.repeat("*", badWord.getBadWord().length()));
         }
         return string;
     }
