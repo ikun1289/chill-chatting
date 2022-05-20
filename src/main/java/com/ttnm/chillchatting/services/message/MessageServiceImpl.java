@@ -120,9 +120,11 @@ public class MessageServiceImpl implements MessageService{
         Pageable pageable = PageUtils.createPageable(0, 20, "desc", "createdDate");
         List<Message> result = messageRepository.getListMessageWithLimit(kenh, pageable);
         Collections.reverse(result);
+
         for (Message message: result) {
             message.setMessage(badWordService.filter(message.getMessage()));
         }
+
         return result;
     }
 

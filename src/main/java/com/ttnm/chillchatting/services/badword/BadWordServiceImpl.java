@@ -81,11 +81,14 @@ public class BadWordServiceImpl implements BadWordService {
         List<BadWord> badWords = getAll();
         String temp = StringUtils.removeAccentJava(string).toLowerCase(Locale.ROOT);
         for (BadWord badWord : badWords) {
+            int length = badWord.getBadWord().length();
+            String filter = org.apache.commons.lang.StringUtils.repeat("*", badWord.getBadWord().length());
             for (int count = 0; count < temp.length(); count++) {
                 int i = temp.substring(count).indexOf(badWord.getBadWord());
                 if (i >= 0) {
-                    string = string.replace(string.substring(i + count, i + count + badWord.getBadWord().length()), org.apache.commons.lang.StringUtils.repeat("*", badWord.getBadWord().length()));
-                    count = i+count + badWord.getBadWord().length();
+                    //string = string.replace(string.substring(i + count, i + count + badWord.getBadWord().length()), org.apache.commons.lang.StringUtils.repeat("*", badWord.getBadWord().length()));
+                    string = string.substring(0,i+count) + filter + string.substring(i + count + length);
+                    count = i+count + length;
                 }
                 else break;
             }
