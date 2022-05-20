@@ -5,7 +5,7 @@ import com.ttnm.chillchatting.entities.BadWord;
 import com.ttnm.chillchatting.exceptions.InvalidException;
 import com.ttnm.chillchatting.exceptions.NotFoundException;
 import com.ttnm.chillchatting.repositories.BadWordRepository;
-import com.ttnm.chillchatting.utils.StringUtils;
+import com.ttnm.chillchatting.utils.StringUtilsVN;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
@@ -40,7 +40,7 @@ public class BadWordServiceImpl implements BadWordService {
 
     @Override
     public BadWord createNewBadWord(BadWordDto dto) {
-        String bw = StringUtils.removeAccentJava(dto.getBadWord()).toLowerCase(Locale.ROOT);
+        String bw = StringUtilsVN.removeAccentJava(dto.getBadWord()).toLowerCase(Locale.ROOT);
         if (ObjectUtils.isEmpty(bw))
             throw new InvalidException("Bad word filter cannot be empty");
         if (bw.length() < 3)
@@ -57,7 +57,7 @@ public class BadWordServiceImpl implements BadWordService {
     @Override
     public BadWord updateBadWord(String id, BadWordDto dto) {
         BadWord badWord = getBadWordById(id);
-        String bw = StringUtils.removeAccentJava(dto.getBadWord()).toLowerCase(Locale.ROOT);
+        String bw = StringUtilsVN.removeAccentJava(dto.getBadWord()).toLowerCase(Locale.ROOT);
         if (ObjectUtils.isEmpty(bw))
             throw new InvalidException("Bad word filter cannot be empty");
         if (bw.length() < 3)
@@ -79,7 +79,7 @@ public class BadWordServiceImpl implements BadWordService {
     @Override
     public String filter(String string) {
         List<BadWord> badWords = getAll();
-        String temp = StringUtils.removeAccentJava(string).toLowerCase(Locale.ROOT);
+        String temp = StringUtilsVN.removeAccentJava(string).toLowerCase(Locale.ROOT);
         for (BadWord badWord : badWords) {
             int length = badWord.getBadWord().length();
             String filter = org.apache.commons.lang.StringUtils.repeat("*", badWord.getBadWord().length());
@@ -100,7 +100,7 @@ public class BadWordServiceImpl implements BadWordService {
     public String filterWithRegex(String string) {
         List<BadWord> badWords = getAll();
         for (BadWord badWord : badWords) {
-            String regex = StringUtils.makeVietNameseRegex(badWord.getBadWord());
+            String regex = StringUtilsVN.makeVietNameseRegex(badWord.getBadWord());
             Pattern pattern = Pattern.compile(regex);
             System.out.println(pattern.pattern());
             string = string.replaceAll(pattern.pattern(), org.apache.commons.lang.StringUtils.repeat("*", badWord.getBadWord().length()));

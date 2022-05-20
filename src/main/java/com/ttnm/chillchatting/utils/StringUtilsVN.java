@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * Time      : 10:11
  * Filename  : StringUtils
  */
-public class StringUtils {
+public class StringUtilsVN {
     public static String removeAccentJava(String s) {
         String temp = Normalizer.normalize(s, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
