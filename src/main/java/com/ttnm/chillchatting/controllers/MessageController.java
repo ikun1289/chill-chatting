@@ -48,14 +48,8 @@ public class MessageController {
     @PostMapping
     public ResponseEntity<Message> guiMessage(@RequestBody MessageDto dto) throws Exception {
         Message message = messageService.guiMessage(dto);
-        Thread thread = new Thread(() -> {
-            try {
-                scheduledUpdateMessage();
-            } catch (InterruptedException e) {
-                throw new InvalidException("error");
-            }
-        });
-        thread.start();
+        System.out.println(message.getChannel());
+        this.template.convertAndSend("/message/" + message.getChannel(), message);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
@@ -65,13 +59,13 @@ public class MessageController {
     }
 
     public void scheduledUpdateMessage() throws InterruptedException {
-        for (MyEnum kenh: messageService.getKenhs()) {
+        for (MyEnum kenh : messageService.getKenhs()) {
 //            MessageDto message = new MessageDto();
 //            message.setChannel(kenh.getKey());
 //            message.setMessage(new Random().nextInt()+"");
 //            message.setGuestName("anonymous#1");
 //            messageService.guiMessage(message);
-            this.template.convertAndSend("/message/"+kenh.getKey(), messageService.getTheLatestMessages(kenh.getKey()));
+            this.template.convertAndSend("/message/" + kenh.getKey(), messageService.getTheLatestMessages(kenh.getKey()));
         }
     }
 

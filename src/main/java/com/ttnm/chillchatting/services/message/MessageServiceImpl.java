@@ -111,7 +111,9 @@ public class MessageServiceImpl implements MessageService{
         message.setGuestName(dto.getGuestName());
         message.setCreatedDate(new Date());
 
-        return messageRepository.save(message);
+        message = messageRepository.save(message);
+        message.setMessage(badWordService.filter(message.getMessage()));
+        return message;
 
     }
 
