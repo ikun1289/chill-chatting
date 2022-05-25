@@ -22,5 +22,9 @@ public interface MessageService{
 
     Statistic getStatistic();
 
+    void updateFilterForLatestMessage();
+
     EvaluateScore nguoiDungDanhGia(EvaluateScoreDto dto);
+
+    List<Message> saveListMessage(List<Message> messageList);
 }

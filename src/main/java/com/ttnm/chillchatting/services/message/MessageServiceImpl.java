@@ -106,13 +106,13 @@ public class MessageServiceImpl implements MessageService{
             throw new InvalidException("Channel không hợp lệ");
 
         Message message = new Message();
-        message.setMessage(dto.getMessage());
+        message.setMessage(badWordService.filter( dto.getMessage()));
+        message.setRealMessage(dto.getMessage());
         message.setChannel(dto.getChannel());
         message.setGuestName(dto.getGuestName());
         message.setCreatedDate(new Date());
 
         message = messageRepository.save(message);
-        message.setMessage(badWordService.filter(message.getMessage()));
         return message;
 
     }
@@ -123,9 +123,9 @@ public class MessageServiceImpl implements MessageService{
         List<Message> result = messageRepository.getListMessageWithLimit(kenh, pageable);
         Collections.reverse(result);
 
-        for (Message message: result) {
-            message.setMessage(badWordService.filter(message.getMessage()));
-        }
+//        for (Message message: result) {
+//            message.setMessage(badWordService.filter(message.getMessage()));
+//        }
 
         return result;
     }
@@ -250,6 +250,23 @@ public class MessageServiceImpl implements MessageService{
     }
 
     @Override
+    public void updateFilterForLatestMessage() {
+        Thread newThread = new Thread(() -> {
+            List<Message> messageList = new ArrayList<>();
+            for (MyEnum myEnum : getKenhs()) {
+                messageList.addAll(getTheLatestMessages(myEnum.getKey()));
+            }
+            for (Message message : messageList) {
+                if(ObjectUtils.isEmpty(message.getRealMessage()))
+                    message.setRealMessage(message.getMessage());
+                message.setMessage(badWordService.filter(message.getRealMessage()));
+            }
+            saveListMessage(messageList);
+        });
+        newThread.start();
+    }
+
+    @Override
     public EvaluateScore nguoiDungDanhGia(EvaluateScoreDto dto) {
         EvaluateScore evaluateScore = new EvaluateScore();
         if(dto.getOverallScore()>5)
@@ -264,4 +281,8 @@ public class MessageServiceImpl implements MessageService{
         return mongoTemplate.save(evaluateScore);
     }
 
+    @Override
+    public List<Message> saveListMessage(List<Message> messageList) {
+        return messageRepository.saveAll(messageList);
+    }
 }

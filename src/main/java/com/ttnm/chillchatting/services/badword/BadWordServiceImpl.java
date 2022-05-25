@@ -1,16 +1,21 @@
 package com.ttnm.chillchatting.services.badword;
 
+import com.ttnm.chillchatting.dtos.MyEnum;
 import com.ttnm.chillchatting.dtos.badword.BadWordDto;
 import com.ttnm.chillchatting.entities.BadWord;
+import com.ttnm.chillchatting.entities.Message;
 import com.ttnm.chillchatting.exceptions.InvalidException;
 import com.ttnm.chillchatting.exceptions.NotFoundException;
 import com.ttnm.chillchatting.repositories.BadWordRepository;
+import com.ttnm.chillchatting.services.message.MessageService;
+import com.ttnm.chillchatting.utils.EnumChannel;
 import com.ttnm.chillchatting.utils.StringUtilsVN;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -87,10 +92,9 @@ public class BadWordServiceImpl implements BadWordService {
                 int i = temp.substring(count).indexOf(badWord.getBadWord());
                 if (i >= 0) {
                     //string = string.replace(string.substring(i + count, i + count + badWord.getBadWord().length()), org.apache.commons.lang.StringUtils.repeat("*", badWord.getBadWord().length()));
-                    string = string.substring(0,i+count) + filter + string.substring(i + count + length);
-                    count = i+count + length;
-                }
-                else break;
+                    string = string.substring(0, i + count) + filter + string.substring(i + count + length);
+                    count = i + count + length;
+                } else break;
             }
         }
         return string;

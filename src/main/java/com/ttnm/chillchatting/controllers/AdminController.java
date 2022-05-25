@@ -91,19 +91,24 @@ public class AdminController {
     }
 
     @PostMapping("/bad-word")
-    public ResponseEntity<BadWord> getAllBadWord(@RequestBody BadWordDto dto) {
-        return new ResponseEntity<>(badWordService.createNewBadWord(dto), HttpStatus.OK);
+    public ResponseEntity<BadWord> createBadWord(@RequestBody BadWordDto dto) {
+        BadWord badWord = badWordService.createNewBadWord(dto);
+        messageService.updateFilterForLatestMessage();
+        return new ResponseEntity<>(badWord, HttpStatus.OK);
     }
 
     @PutMapping("/bad-word/{id}")
     public ResponseEntity<BadWord> updateBadWord(@PathVariable String id, @RequestBody BadWordDto dto) {
-        return new ResponseEntity<>(badWordService.updateBadWord(id,dto), HttpStatus.OK);
+        BadWord badWord = badWordService.updateBadWord(id, dto);
+        messageService.updateFilterForLatestMessage();
+        return new ResponseEntity<>(badWord, HttpStatus.OK);
     }
 
-    @DeleteMapping("/bad-word")
-    public ResponseEntity<String> getAllBadWord(@PathVariable String id) {
+    @DeleteMapping("/bad-word/{id}")
+    public ResponseEntity<String> deleteBadWord(@PathVariable String id) {
         badWordService.deleteBadWord(id);
-        return new ResponseEntity<>("Delete success", HttpStatus.OK);
+        messageService.updateFilterForLatestMessage();
+        return new ResponseEntity<>("Delete bad word filter success", HttpStatus.OK);
     }
 
     @GetMapping("/number-user")

@@ -18,7 +18,7 @@ public interface BadWordRepository extends MongoRepository<BadWord, String> {
     @Query(value = "{}")
     List<BadWord> getAll();
 
-    @Query(value = "{'_id':?0}", count = true)
+    @Query(value = "{'_id':?0}")
     Optional<BadWord> getById(String id);
 
 }
