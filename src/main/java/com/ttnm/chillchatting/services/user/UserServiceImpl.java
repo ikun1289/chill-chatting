@@ -1,5 +1,8 @@
 package com.ttnm.chillchatting.services.user;
 
+import com.ttnm.chillchatting.configs.jwt.JwtAuthenticationFilter;
+import com.ttnm.chillchatting.configs.jwt.JwtTokenProvider;
+import com.ttnm.chillchatting.dtos.user.NewPassDto;
 import com.ttnm.chillchatting.dtos.user.UserDto;
 import com.ttnm.chillchatting.entities.User;
 import com.ttnm.chillchatting.exceptions.InvalidException;
@@ -8,12 +11,14 @@ import com.ttnm.chillchatting.repositories.UserRepository;
 import com.ttnm.chillchatting.utils.CustomUserDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 
@@ -25,8 +30,11 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    private final MongoTemplate mongoTemplate;
+
+    public UserServiceImpl(UserRepository userRepository, MongoTemplate mongoTemplate) {
         this.userRepository = userRepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
     @Override
@@ -55,6 +63,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User getUserById(String id) {
+        return userRepository.findById(id)
+                .orElseThrow(()->new InvalidException("User not found"));
+    }
+
+    @Override
     public User createNewAdmin(UserDto dto){
         User user = getUserByUsername(dto.getUserName());
         if(!ObjectUtils.isEmpty(user))
@@ -79,4 +93,25 @@ public class UserServiceImpl implements UserService {
     public List<User> getAllUser(){
         return userRepository.findAll();
     }
+
+    @Override
+    public User changePass(NewPassDto newPassDto, HttpServletRequest request) {
+        if(newPassDto.getOldPass().isEmpty())
+            throw new InvalidException("Old password cannot be empty");
+        if(newPassDto.getNewPass().isEmpty())
+            throw new InvalidException("New password cannot be empty");
+        if(newPassDto.getNewPass().length()<6 || newPassDto.getNewPass().length()>20)
+            throw new InvalidException("Password must be 6 to 20 character");
+        String jwtToken = new JwtAuthenticationFilter().getJwtFromRequest(request);
+        String userId = new JwtTokenProvider().getUserIdFromJWT(jwtToken);
+
+        User user = getUserById(userId);
+        if(passwordEncoder.matches(newPassDto.getOldPass(), user.getPassword()))
+            user.setPassword(passwordEncoder.encode(newPassDto.getNewPass()));
+        else
+            throw new InvalidException("Old password not match");
+
+        return mongoTemplate.save(user);
+    }
+
 }

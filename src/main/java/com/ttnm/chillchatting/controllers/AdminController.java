@@ -4,6 +4,7 @@ import com.ttnm.chillchatting.configs.jwt.JwtTokenProvider;
 import com.ttnm.chillchatting.dtos.LoginResponse;
 import com.ttnm.chillchatting.dtos.badword.BadWordDto;
 import com.ttnm.chillchatting.dtos.statistic.Statistic;
+import com.ttnm.chillchatting.dtos.user.NewPassDto;
 import com.ttnm.chillchatting.dtos.user.UserDto;
 import com.ttnm.chillchatting.entities.BadWord;
 import com.ttnm.chillchatting.entities.User;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController
@@ -122,5 +124,10 @@ public class AdminController {
     @GetMapping("/list-admin")
     public ResponseEntity<List<User>> getListUser() {
         return new ResponseEntity<>(userService.getAllUser(), HttpStatus.OK);
+    }
+
+    @PostMapping("/change-pass")
+    public ResponseEntity<User> changePass(@RequestBody NewPassDto newPassDto, HttpServletRequest request) {
+        return new ResponseEntity<>(userService.changePass(newPassDto, request), HttpStatus.OK);
     }
 }

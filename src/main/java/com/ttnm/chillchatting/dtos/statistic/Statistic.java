@@ -1,6 +1,7 @@
 package com.ttnm.chillchatting.dtos.statistic;
 
 import com.ttnm.chillchatting.dtos.statistic.embed.ChartStatistic;
+import com.ttnm.chillchatting.entities.EvaluateScore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,5 +20,7 @@ public class Statistic {
     private int totalMessageThisMonth;
 
     private List<ChartStatistic> statisticMessageForThePastMonth;
+
+    private EvaluateScore evaluateScore;
 
 }

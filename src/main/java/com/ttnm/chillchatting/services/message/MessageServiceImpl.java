@@ -1,8 +1,7 @@
 package com.ttnm.chillchatting.services.message;
 
 
-import com.ttnm.chillchatting.configs.jwt.JwtAuthenticationFilter;
-import com.ttnm.chillchatting.configs.jwt.JwtTokenProvider;
+import com.ttnm.chillchatting.dtos.EvaluateScoreDto;
 import com.ttnm.chillchatting.dtos.MyEnum;
 import com.ttnm.chillchatting.dtos.RegistNameRequest;
 import com.ttnm.chillchatting.dtos.RegistNameResponse;
@@ -10,11 +9,14 @@ import com.ttnm.chillchatting.dtos.message.MessageDto;
 import com.ttnm.chillchatting.dtos.statistic.MapStatistic;
 import com.ttnm.chillchatting.dtos.statistic.Statistic;
 import com.ttnm.chillchatting.dtos.statistic.embed.ChartStatistic;
+import com.ttnm.chillchatting.entities.EvaluateScore;
 import com.ttnm.chillchatting.entities.Message;
 import com.ttnm.chillchatting.exceptions.InvalidException;
+import com.ttnm.chillchatting.repositories.EvaluateScoreRepository;
 import com.ttnm.chillchatting.repositories.MessageRepository;
 import com.ttnm.chillchatting.services.badword.BadWordService;
 import com.ttnm.chillchatting.utils.EnumChannel;
+import com.ttnm.chillchatting.utils.NumberUtils;
 import com.ttnm.chillchatting.utils.PageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -42,9 +44,7 @@ public class MessageServiceImpl implements MessageService{
 
     private final MessageRepository messageRepository;
 
-    private final JwtTokenProvider jwtTokenProvider;
-
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final EvaluateScoreRepository evaluateScoreRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -54,14 +54,14 @@ public class MessageServiceImpl implements MessageService{
 
     private static final String SECRET = "xhuuanng";
 
-    public MessageServiceImpl(MessageRepository messageRepository, JwtTokenProvider jwtTokenProvider, JwtAuthenticationFilter jwtAuthenticationFilter, PasswordEncoder passwordEncoder, MongoTemplate mongoTemplate, BadWordService badWordService) {
+    public MessageServiceImpl(MessageRepository messageRepository, EvaluateScoreRepository evaluateScoreRepository, PasswordEncoder passwordEncoder, MongoTemplate mongoTemplate, BadWordService badWordService) {
         this.messageRepository = messageRepository;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.evaluateScoreRepository = evaluateScoreRepository;
         this.passwordEncoder = passwordEncoder;
         this.mongoTemplate = mongoTemplate;
         this.badWordService = badWordService;
     }
+
 
     @Override
     public List<MyEnum> getKenhs() {
@@ -160,7 +160,7 @@ public class MessageServiceImpl implements MessageService{
         int totalMessageThisMonth = messageRepository.countMessageByDateRange(firstDate, lastDate);
 
         //statistic
-        List<MapStatistic> listStatistic = testStatistic(firstDate, lastDate);
+        List<MapStatistic> listStatistic = getMapStatistic(firstDate, lastDate);
         cal.setTime(today);
         cal.set(Calendar.DAY_OF_MONTH, 1);
         int myMonth=cal.get(Calendar.MONTH);
@@ -186,16 +186,20 @@ public class MessageServiceImpl implements MessageService{
             chartStatisticList.add(chartStatistic);
         }
 
+        //get evaluate score
+        EvaluateScore evaluateScore = getAvgEvaluateScore();
+
         //statistic
         Statistic statistic = new Statistic();
         statistic.setTotalMessagesToday(totalMessagesToday);
         statistic.setTotalMessageThisMonth(totalMessageThisMonth);
         statistic.setStatisticMessageForThePastMonth(chartStatisticList);
+        statistic.setEvaluateScore(evaluateScore);
         return statistic;
 
     }
 
-    public List<MapStatistic> testStatistic(Date firstDate, Date lastDate) {
+    public List<MapStatistic> getMapStatistic(Date firstDate, Date lastDate) {
         Criteria criteria = new Criteria();
 
         criteria.and("createdDate").gte(firstDate).lte(lastDate);
@@ -223,9 +227,41 @@ public class MessageServiceImpl implements MessageService{
 
         AggregationResults<MapStatistic> aggregate = mongoTemplate.aggregate(aggregation,
                 Message.class, MapStatistic.class);
-        List<MapStatistic> documents = aggregate.getMappedResults();
 
-        return documents;
+        return aggregate.getMappedResults();
+    }
+
+
+    public EvaluateScore getAvgEvaluateScore() {
+        GroupOperation groupOperation = group().avg("overallScore").as("overallScore")
+                .avg("chatScore").as("chatScore")
+                .avg("interfaceScore").as("interfaceScore");
+        Aggregation aggregation = newAggregation(
+                groupOperation
+        );
+        AggregationResults<EvaluateScore> aggregate = mongoTemplate.aggregate(aggregation,
+                EvaluateScore.class, EvaluateScore.class);
+        EvaluateScore evaluateScore = aggregate.getMappedResults().stream().findFirst().orElse(new EvaluateScore());
+        evaluateScore.setOverallScore(NumberUtils.roundUp(evaluateScore.getOverallScore(),1));
+        evaluateScore.setChatScore(NumberUtils.roundUp(evaluateScore.getChatScore(),1));
+        evaluateScore.setInterfaceScore(NumberUtils.roundUp(evaluateScore.getInterfaceScore(),1));
+        return evaluateScore;
+
+    }
+
+    @Override
+    public EvaluateScore nguoiDungDanhGia(EvaluateScoreDto dto) {
+        EvaluateScore evaluateScore = new EvaluateScore();
+        if(dto.getOverallScore()>5)
+            dto.setOverallScore(5);
+        if(dto.getChatScore()>5)
+            dto.setChatScore(5);
+        if(dto.getInterfaceScore()>5)
+            dto.setInterfaceScore(5);
+        evaluateScore.setOverallScore(dto.getOverallScore()>0? dto.getOverallScore() : 1);
+        evaluateScore.setChatScore(dto.getChatScore()>0? dto.getChatScore() : 1);
+        evaluateScore.setInterfaceScore(dto.getInterfaceScore()>0? dto.getInterfaceScore() : 1);
+        return mongoTemplate.save(evaluateScore);
     }
 
 }
