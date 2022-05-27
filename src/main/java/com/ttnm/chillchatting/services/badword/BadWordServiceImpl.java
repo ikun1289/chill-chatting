@@ -48,7 +48,7 @@ public class BadWordServiceImpl implements BadWordService {
         String bw = StringUtilsVN.removeAccentJava(dto.getBadWord()).toLowerCase(Locale.ROOT);
         if (ObjectUtils.isEmpty(bw))
             throw new InvalidException("Bad word filter cannot be empty");
-        if (bw.length() < 3)
+        if (bw.length() < 2)
             throw new InvalidException("Bad word filter too short");
         if (bw.length() > 10)
             throw new InvalidException("Bad word filter too long");
@@ -65,7 +65,7 @@ public class BadWordServiceImpl implements BadWordService {
         String bw = StringUtilsVN.removeAccentJava(dto.getBadWord()).toLowerCase(Locale.ROOT);
         if (ObjectUtils.isEmpty(bw))
             throw new InvalidException("Bad word filter cannot be empty");
-        if (bw.length() < 3)
+        if (bw.length() < 2)
             throw new InvalidException("Bad word filter too short");
         if (bw.length() > 10)
             throw new InvalidException("Bad word filter too long");
